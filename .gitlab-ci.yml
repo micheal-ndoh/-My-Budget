@@ -1,0 +1,96 @@
+# GitLab CI/CD Pipeline for PWA Deployment
+
+stages:
+  - build
+  - deploy
+
+variables:
+  ANDROID_COMPILE_SDK: "33"
+  ANDROID_BUILD_TOOLS: "33.0.0"
+  ANDROID_SDK_TOOLS: "9477386"
+
+# Android Build Job
+android_build:
+  stage: build
+  image: openjdk:11-jdk
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl unzip
+    - curl -s https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip -o android-sdk.zip
+    - unzip -q android-sdk.zip -d android-sdk
+    - export ANDROID_HOME=$PWD/android-sdk
+    - export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+    - yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+    - $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}"
+    - npm install -g @bubblewrap/cli
+  script:
+    - bubblewrap build
+  artifacts:
+    paths:
+      - app-release-signed.apk
+      - app-release-bundle.aab
+    expire_in: 1 week
+  only:
+    - main
+    - tags
+
+# Android Deploy Job
+android_deploy:
+  stage: deploy
+  image: ruby:3.0
+  dependencies:
+    - android_build
+  before_script:
+    - gem install fastlane
+    - echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android.keystore
+    - export FASTLANE_PASSWORD="$FASTLANE_PASSWORD"
+    - export FASTLANE_USER="$FASTLANE_USER"
+  script:
+    - fastlane android deploy
+  environment:
+    name: production
+  only:
+    - tags
+  when: manual
+
+# iOS Build Job
+ios_build:
+  stage: build
+  tags:
+    - macos
+  before_script:
+    - brew install node
+    # Assuming the iOS project is generated and committed in ios/ directory
+    # If using PWABuilder, generate the project in CI (if CLI available)
+    # For now, assuming ios/ contains the Xcode project
+  script:
+    - cd ios
+    - xcodebuild -workspace MyBudget.xcworkspace -scheme MyBudget -sdk iphoneos -configuration Release archive -archivePath $CI_PROJECT_DIR/build.xcarchive
+    - xcodebuild -exportArchive -archivePath $CI_PROJECT_DIR/build.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $CI_PROJECT_DIR/build
+  artifacts:
+    paths:
+      - build/MyBudget.ipa
+    expire_in: 1 week
+  only:
+    - main
+    - tags
+
+# iOS Deploy Job
+ios_deploy:
+  stage: deploy
+  tags:
+    - macos
+  dependencies:
+    - ios_build
+  before_script:
+    - gem install fastlane
+    - echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > certificate.p12
+    - echo "$APPLE_PROVISIONING_PROFILE_BASE64" | base64 -d > profile.mobileprovision
+    - export FASTLANE_PASSWORD="$FASTLANE_PASSWORD"
+    - export FASTLANE_USER="$FASTLANE_USER"
+  script:
+    - fastlane ios deploy
+  environment:
+    name: production
+  only:
+    - tags
+  when: manual
