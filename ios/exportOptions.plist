@@ -8,7 +8,6 @@
     <string>YOUR_TEAM_ID</string>
     <key>uploadSymbols</key>
     <true/>
-    <key>uploadBitcode</key>
     <false/>
 </dict>
 </plist>
