@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.gradle
+build
+android.keystore
+app
+gradle*
+gradlew*
+build.gradle
+app-release*
+manifest-checksum.txt
+local.properties
+twa-manifest.json
+settings.gradle
