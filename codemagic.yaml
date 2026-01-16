@@ -27,4 +27,4 @@ workflows:
           cp -r $CM_BUILD_DIR/build.xcarchive/Products/Applications/App.app $CM_BUILD_DIR/Payload/
           cd $CM_BUILD_DIR && zip -r build.ipa Payload/
     artifacts:
-      - build/*.ipa
+      - $CM_BUILD_DIR/build.ipa
