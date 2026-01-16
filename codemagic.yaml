@@ -21,6 +21,10 @@ workflows:
         script: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release -allowProvisioningUpdates IPHONEOS_DEPLOYMENT_TARGET=15.1 CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive -archivePath $CM_BUILD_DIR/build.xcarchive
-          xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $CM_BUILD_DIR/build
+          
+          # Extract app from archive and create IPA manually
+          mkdir -p $CM_BUILD_DIR/Payload
+          cp -r $CM_BUILD_DIR/build.xcarchive/Products/Applications/App.app $CM_BUILD_DIR/Payload/
+          cd $CM_BUILD_DIR && zip -r build.ipa Payload/
     artifacts:
       - build/*.ipa
