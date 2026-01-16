@@ -20,16 +20,10 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release -allowProvisioningUpdates IPHONEOS_DEPLOYMENT_TARGET=15.1 CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive -archivePath $CM_BUILD_DIR/build.xcarchive
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphonesimulator -configuration Release -allowProvisioningUpdates IPHONEOS_DEPLOYMENT_TARGET=15.1 CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive -archivePath $CM_BUILD_DIR/build.xcarchive
           
-          # Extract app from archive and create IPA manually
-          mkdir -p $CM_BUILD_DIR/Payload
-          cp -r $CM_BUILD_DIR/build.xcarchive/Products/Applications/App.app $CM_BUILD_DIR/Payload/
-          cd $CM_BUILD_DIR && zip -r build.ipa Payload/
-          
-          # Also create zipped .app bundle for Appetize.io
+          # Extract app from archive and create zipped .app bundle for Appetize.io
           cd $CM_BUILD_DIR/build.xcarchive/Products/Applications
           zip -r $CM_BUILD_DIR/App.app.zip App.app
     artifacts:
-      - $CM_BUILD_DIR/build.ipa
       - $CM_BUILD_DIR/App.app.zip
