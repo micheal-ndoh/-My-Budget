@@ -20,7 +20,7 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath $CM_BUILD_DIR/build.xcarchive
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release -allowProvisioningUpdates archive -archivePath $CM_BUILD_DIR/build.xcarchive CODE_SIGN_IDENTITY="iPhone Developer"
           xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $CM_BUILD_DIR/build
     artifacts:
       - build/*.ipa
